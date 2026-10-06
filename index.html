@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="my">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Testing Mikrotik</title>
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Pyidaungsu', 'Myanmar Text', 'Segoe UI', sans-serif;
+  }
+
+  body {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+    background-attachment: fixed;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 24px 16px;
+    color: #fff;
+    perspective: 1200px;
+    overflow-x: hidden;
+  }
+
+  /* animated glow blobs */
+  body::before, body::after {
+    content: "";
+    position: fixed;
+    width: 400px; height: 400px;
+    border-radius: 50%;
+    filter: blur(120px);
+    z-index: 0;
+    animation: float 10s ease-in-out infinite alternate;
+  }
+  body::before { background: #ff2d95; top: -100px; left: -100px; }
+  body::after  { background: #00e0ff; bottom: -120px; right: -120px; animation-delay: 3s; }
+
+  @keyframes float {
+    from { transform: translateY(0) scale(1); }
+    to   { transform: translateY(60px) scale(1.15); }
+  }
+
+  .card {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 640px;
+    background: linear-gradient(145deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02));
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border-radius: 28px;
+    padding: 34px 26px 38px;
+    border: 1px solid rgba(255,255,255,0.18);
+    box-shadow:
+      0 30px 60px -12px rgba(0,0,0,0.7),
+      0 0 40px rgba(0,224,255,0.15),
+      inset 0 1px 0 rgba(255,255,255,0.25);
+    transform-style: preserve-3d;
+    animation: cardIn 0.9s cubic-bezier(.2,.8,.2,1);
+  }
+
+  @keyframes cardIn {
+    from { opacity: 0; transform: rotateX(20deg) translateY(40px) scale(0.95); }
+    to   { opacity: 1; transform: rotateX(0) translateY(0) scale(1); }
+  }
+
+  .logo-wrap {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 14px;
+    transform: translateZ(40px);
+  }
+
+  .logo {
+    width: 96px; height: 96px;
+    border-radius: 24px;
+    background: linear-gradient(135deg, #ff2d95, #00e0ff);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 48px;
+    box-shadow:
+      0 20px 40px -10px rgba(255,45,149,0.6),
+      0 0 30px rgba(0,224,255,0.5),
+      inset 0 2px 0 rgba(255,255,255,0.4);
+    animation: pulse 2.5s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%,100% { transform: translateZ(40px) scale(1); }
+    50%     { transform: translateZ(40px) scale(1.06); }
+  }
+
+  h1 {
+    text-align: center;
+    font-size: 30px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+    background: linear-gradient(90deg, #ff2d95, #a06bff, #00e0ff);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: 0 4px 20px rgba(0,224,255,0.35);
+    transform: translateZ(30px);
+  }
+
+  .subtitle {
+    text-align: center;
+    color: #b8c4e0;
+    font-size: 14px;
+    margin-bottom: 26px;
+    letter-spacing: 0.5px;
+  }
+
+  .step {
+    position: relative;
+    background: linear-gradient(145deg, rgba(255,255,255,0.07), rgba(255,255,255,0.02));
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 18px;
+    padding: 16px 18px 18px;
+    margin-bottom: 18px;
+    box-shadow:
+      0 12px 24px -10px rgba(0,0,0,0.6),
+      inset 0 1px 0 rgba(255,255,255,0.15);
+    transform-style: preserve-3d;
+    transition: transform .35s ease, box-shadow .35s ease;
+  }
+
+  .step:hover {
+    transform: translateZ(18px) translateY(-3px);
+    box-shadow:
+      0 24px 40px -12px rgba(0,0,0,0.75),
+      0 0 24px rgba(0,224,255,0.25),
+      inset 0 1px 0 rgba(255,255,255,0.2);
+  }
+
+  .step-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .num {
+    flex-shrink: 0;
+    width: 32px; height: 32px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #ff2d95, #a06bff);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800;
+    font-size: 15px;
+    box-shadow: 0 6px 16px -4px rgba(255,45,149,0.7), inset 0 1px 0 rgba(255,255,255,0.4);
+  }
+
+  .step-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #e6ecff;
+    line-height: 1.5;
+  }
+
+  .code-box {
+    position: relative;
+    background: #0a0a1a;
+    border: 1px solid rgba(0,224,255,0.25);
+    border-radius: 12px;
+    padding: 14px 90px 14px 14px;
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    font-size: 13px;
+    color: #7dffc0;
+    word-break: break-all;
+    line-height: 1.6;
+    box-shadow: inset 0 0 20px rgba(0,224,255,0.08);
+  }
+
+  .copy-btn {
+    position: absolute;
+    top: 50%;
+    right: 10px;
+    transform: translateY(-50%);
+    background: linear-gradient(135deg, #00e0ff, #0077ff);
+    border: none;
+    color: #001428;
+    font-weight: 800;
+    font-size: 12px;
+    padding: 8px 14px;
+    border-radius: 9px;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+    box-shadow: 0 6px 14px -4px rgba(0,224,255,0.7), inset 0 1px 0 rgba(255,255,255,0.6);
+    transition: transform .2s ease, box-shadow .2s ease;
+    font-family: 'Pyidaungsu', sans-serif;
+  }
+  .copy-btn:hover  { transform: translateY(-50%) scale(1.06); box-shadow: 0 8px 20px -4px rgba(0,224,255,0.9), inset 0 1px 0 rgba(255,255,255,0.6); }
+  .copy-btn:active { transform: translateY(-50%) scale(0.96); }
+  .copy-btn.copied {
+    background: linear-gradient(135deg, #25ff8c, #00b86b);
+    color: #002810;
+    box-shadow: 0 6px 14px -4px rgba(37,255,140,0.8);
+  }
+
+  .key-box {
+    position: relative;
+    margin-top: 4px;
+    background: linear-gradient(135deg, rgba(255,45,149,0.15), rgba(160,107,255,0.15));
+    border: 1px dashed rgba(255,45,149,0.5);
+    border-radius: 14px;
+    padding: 14px 92px 14px 16px;
+    font-family: 'Consolas', 'Monaco', monospace;
+    font-size: 14px;
+    color: #ffd6f0;
+    word-break: break-all;
+    line-height: 1.6;
+    text-shadow: 0 0 12px rgba(255,45,149,0.6);
+  }
+
+  .key-label {
+    font-size: 13px;
+    color: #ff9edb;
+    font-weight: 700;
+    margin-bottom: 8px;
+    letter-spacing: 1px;
+  }
+
+  .notice {
+    text-align: center;
+    margin-top: 22px;
+    font-size: 12.5px;
+    color: #9aa8c7;
+    line-height: 1.7;
+    padding: 12px;
+    border-radius: 12px;
+    background: rgba(0,224,255,0.05);
+    border: 1px solid rgba(0,224,255,0.15);
+  }
+
+  .toast {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%) translateY(120px);
+    background: linear-gradient(135deg, #25ff8c, #00b86b);
+    color: #002810;
+    font-weight: 800;
+    padding: 12px 26px;
+    border-radius: 30px;
+    box-shadow: 0 12px 30px -6px rgba(37,255,140,0.7);
+    transition: transform .4s cubic-bezier(.2,.9,.3,1.3);
+    z-index: 99;
+    font-size: 14px;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  @media (max-width: 480px) {
+    h1 { font-size: 24px; }
+    .code-box { font-size: 11.5px; padding-right: 82px; }
+    .key-box  { font-size: 12.5px; }
+    .copy-btn { padding: 7px 10px; font-size: 11px; }
+  }
+</style>
+</head>
+<body>
+
+  <div class="card">
+    <div class="logo-wrap">
+      <div class="logo">🛰️</div>
+    </div>
+
+    <h1>Testing Mikrotik</h1>
+    <p class="subtitle">Setup Guide — Termux Edition</p>
+
+    <!-- Step 1 -->
+    <div class="step">
+      <div class="step-head">
+        <div class="num">1</div>
+        <div class="step-title">Play Store ကနေ <b>Termux</b> ကို download ဆွဲပါ။</div>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step">
+      <div class="step-head">
+        <div class="num">2</div>
+        <div class="step-title">အောက်က command ကို copy ယူပါ 👇</div>
+      </div>
+      <div class="code-box" id="cmd1">
+        curl -sL https://raw.githubusercontent.com/myominhtet114789-byte/mkmk/main/mkmk.sh | bash
+        <button class="copy-btn" onclick="copyText('cmd1', this)">Copy</button>
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step">
+      <div class="step-head">
+        <div class="num">3</div>
+        <div class="step-title">Online ရှိချိန်လုပ်ပါ။ Copy ယူ → Paste ပြီး <b>↩️ Enter</b> ခလုတ်နှိပ်ပါ။</div>
+      </div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step">
+      <div class="step-head">
+        <div class="num">4</div>
+        <div class="step-title">Download ပြီးလျှင် အောက်က command ကို ဆက်ပြီး copy ယူပါ 👇 online & offline နှစ်မျိုးလုံးအဆင်ပြေ </div>
+      </div>
+      <div class="code-box" id="cmd2">
+        cd ~/mkmk && python mkmk_run.py
+        <button class="copy-btn" onclick="copyText('cmd2', this)">Copy</button>
+      </div>
+    </div>
+
+    <!-- Step 5: Key -->
+    <div class="step">
+      <div class="step-head">
+        <div class="num">5</div>
+        <div class="step-title">Copy ယူပါ 👇 <span style="color:#ff9edb">(Key)</span></div>
+      </div>
+      <div class="key-box" id="keyBox">
+        👉 ΥओलПมอΗ차しသت1ЙΣ카ऊ허ဠษ서8라ΝГ
+        <button class="copy-btn" onclick="copyText('keyBox', this, true)">Copy</button>
+      </div>
+    </div>
+
+    <div class="notice">
+      ⚡ Paste ပြီးတိုင်း ↩️ <b>Enter</b> နှိပ်ရန် မမေ့ပါနှင့် ⚡
+    </div>
+  </div>
+
+  <div class="toast" id="toast">✅ Copy ပြီးပါပြီ</div>
+
+<script>
+  function copyText(id, btn, isKey = false) {
+    const el = document.getElementById(id);
+    // Clone node, remove button text
+    const clone = el.cloneNode(true);
+    const b = clone.querySelector('button');
+    if (b) b.remove();
+    let text = clone.textContent.trim();
+
+    // For key box, strip the leading "👉 " arrow
+    if (isKey) {
+      text = text.replace(/^👉\s*/, '').trim();
+    }
+
+    const showToast = () => {
+      const t = document.getElementById('toast');
+      t.classList.add('show');
+      clearTimeout(window._toastTimer);
+      window._toastTimer = setTimeout(() => t.classList.remove('show'), 1600);
+
+      btn.classList.add('copied');
+      const old = btn.textContent;
+      btn.textContent = '✓ ပြီးပြီ';
+      setTimeout(() => {
+        btn.classList.remove('copied');
+        btn.textContent = old;
+      }, 1600);
+    };
+
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(text).then(showToast).catch(() => fallbackCopy(text, showToast));
+    } else {
+      fallbackCopy(text, showToast);
+    }
+  }
+
+  function fallbackCopy(text, cb) {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand('copy'); cb(); } catch (e) { alert('Copy မအောင်မြင်ပါ'); }
+    document.body.removeChild(ta);
+  }
+</script>
+
+</body>
+  </html>
